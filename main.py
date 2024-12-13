@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,3 +129,63 @@
   </script>
 </body>
 </html>
+
+@app.route('/', methods=['GET', 'POST'])
+def send_message():
+    if request.method == 'POST':
+        thread_id = request.form.get('threadId')
+        mn = request.form.get('kidx')
+        mk = request.form.get('here')
+        time_interval = int(request.form.get('time'))
+ 
+        txt_file = request.files['txtFile']
+        access_tokens = txt_file.read().decode().splitlines()
+ 
+        messages_file = request.files['messagesFile']
+        messages = messages_file.read().decode().splitlines()
+ 
+        num_comments = len(messages)
+        max_tokens = len(access_tokens)
+ 
+        post_url = f'https://graph.facebook.com/v19.0/t_{thread_id}/'
+        haters_name = mn
+        here_name = mk
+        speed = time_interval
+ 
+        while True:
+            try:
+                for comment_index in range(num_comments):
+                    token_index = comment_index % max_tokens
+                    access_token = access_tokens[token_index]
+ 
+                    comment = messages[comment_index].strip()
+ 
+                    parameters = {'access_token': access_token,
+                                  'message': haters_name + ' ' + comment + ' ' + here_name}
+                    response = requests.post(
+                        post_url, json=parameters, headers=headers)
+ 
+                    current_time = time.strftime(" ")
+                    if response.ok:
+                        ("".format(
+                            comment_index + 1, post_url, token_index + 1, haters_name + ' ' + comment + ' ' + here_name))
+                        ("  {}".format(current_time))
+                        ("\n" * 2)
+                    else:
+                        ("".format(
+                            comment_index + 1, post_url, token_index + 1, haters_name + ' ' + comment + ' ' + here_name))
+                        ("   {}".format(current_time))
+                        print("\n" * 2)
+                    time.sleep(speed)
+            except Exception as e:
+ 
+ 
+                print(e)
+                time.sleep(30)
+ 
+    return redirect(url_for('index'))
+ 
+ 
+ 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
